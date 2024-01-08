@@ -1,4 +1,5 @@
 import java.util.Scanner;
+import java.util.Random;
 
 class Main {
     public static void main(String[] args) {
@@ -6,6 +7,8 @@ class Main {
         int numberOfPencils;
         String currentPlayer;
         String opponentPlayer;
+        int maxTake = 3; // Default maximum pencils that can be taken
+        String difficulty; // Difficulty level
 
         // Asking the user for the initial number of pencils
         while (true) {
@@ -23,20 +26,22 @@ class Main {
             }
         }
 
-        // Asking the user to choose who will go first
-        while (true) {
-            System.out.println("Who will be the first (John, Jack):");
-            currentPlayer = scanner.nextLine().trim();
-            if ("John".equalsIgnoreCase(currentPlayer)) {
-                opponentPlayer = "Jack";
-                break;
-            } else if ("Jack".equalsIgnoreCase(currentPlayer)) {
-                opponentPlayer = "John";
-                break;
-            } else {
-                System.out.println("Choose between 'John' and 'Jack'");
-            }
+        // Asking for maximum number of pencils that can be taken
+        System.out.println("Enter the maximum number of pencils that can be taken in one turn (Default is 3):");
+        try {
+            maxTake = Integer.parseInt(scanner.nextLine());
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid input, continuing with default maximum of 3.");
         }
+
+        // Asking the user to choose the difficulty level
+        System.out.println("Choose the difficulty level (easy, medium, hard):");
+        difficulty = scanner.nextLine().trim().toLowerCase();
+
+        // Asking the user to enter their name
+        System.out.println("Enter your name:");
+        currentPlayer = scanner.nextLine().trim();
+        opponentPlayer = "Jack"; // Default opponent name
 
         // Game loop
         while (numberOfPencils > 0) {
@@ -48,7 +53,7 @@ class Main {
             int pencilsTaken = 0;
             if ("Jack".equalsIgnoreCase(currentPlayer)) {
                 // Jack is the bot
-                pencilsTaken = botMove(numberOfPencils);
+                pencilsTaken = botMove(numberOfPencils, maxTake, difficulty);
                 System.out.println(pencilsTaken);
             } else {
                 // Human player's turn
@@ -56,17 +61,17 @@ class Main {
                     String pencilsInput = scanner.nextLine();
                     try {
                         pencilsTaken = Integer.parseInt(pencilsInput);
-                        if (pencilsTaken >= 1 && pencilsTaken <= 3) {
+                        if (pencilsTaken >= 1 && pencilsTaken <= maxTake) {
                             if (pencilsTaken <= numberOfPencils) {
                                 break;
                             } else {
                                 System.out.println("Too many pencils were taken");
                             }
                         } else {
-                            System.out.println("Possible values: '1', '2' or '3'");
+                            System.out.println("Possible values: '1' to '" + maxTake + "'");
                         }
                     } catch (NumberFormatException e) {
-                        System.out.println("Possible values: '1', '2' or '3'");
+                        System.out.println("Possible values: '1' to '" + maxTake + "'");
                     }
                 }
             }
@@ -89,14 +94,18 @@ class Main {
         scanner.close();
     }
 
-    // Method to calculate the bot's move
-    private static int botMove(int numberOfPencils) {
-        // The bot's strategy to always leave a multiple of 4 pencils
-        int pencilsToLeave = (numberOfPencils - 1) % 4;
-        if (pencilsToLeave == 0) {
-            // If we're in a losing position (a multiple of 4), take 1 pencil
-            return 1;
+    // Method to calculate the bot's move with difficulty
+    private static int botMove(int numberOfPencils, int maxTake, String difficulty) {
+        if ("easy".equals(difficulty)) {
+            // Easy difficulty bot makes random moves
+            return new Random().nextInt(Math.min(numberOfPencils, maxTake)) + 1;
+        } else if ("hard".equals(difficulty)) {
+            // Hard difficulty bot plays optimally
+            int pencilsToLeave = (numberOfPencils - 1) % (maxTake + 1);
+            return pencilsToLeave == 0 ? 1 : pencilsToLeave; // Leave a multiple of (maxTake+1) pencils
+        } else {
+            // Medium difficulty or unspecified, slightly less optimal moves
+            return Math.max(1, (numberOfPencils - 1) % (maxTake + 1));
         }
-        return pencilsToLeave; // Otherwise, leave a multiple of 4
     }
 }
